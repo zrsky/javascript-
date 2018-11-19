@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>原型继承</title>
+</head>
+<body>
+
+</body>
+</html>
+<script type="text/javascript">
+	
+	var Plane = function(){
+		this.blood = 100;
+		this.attackLevel = 1;
+		this.defenseLevel = 1;
+	}
+	var plane = new Plane();
+	console.log(plane)
+	Object.create = Object.create ? Object.create : function(obj){
+		var F = function(){};
+		f.prototype = obj;
+		return new F();
+	}
+	let clonePlane = Object.create(plane);
+	console.log(clonePlane)
+	console.log("......new运算的过程.......");
+
+	function Persion(name){
+		this.name = name;
+	}
+
+	Persion.prototype.getName = function() {
+		return this.name;
+	}
+	var objectFactory = function() {
+		var obj = new Object(),
+		Constructor = [].shift.call(arguments);
+		obj._proto = Constructor.prototype;
+		var ret = Constructor.apply(obj, arguments);
+		console.log(ret)
+		return typeof ret === 'object' ? ret : obj;
+	};
+
+	var a = objectFactory(Persion, 'seven');
+	console.log(a)
+
+
+	document.getElementById = (function(func){
+		return function(){
+			return func.apply(document, arguments);
+		}
+	})(document.getElementById);
+
+	Function.prototype.bind = function(context){
+		var self = this;
+		return function(){
+			return self.apply(context,arguments);
+		}
+	}
+
+
+	Function.prototype.bind = function(context) {
+		var self = this;
+		return function(){
+			return self.apply(context, arguments);
+		}
+	}
+
+
+	Function.prototype.bind = function(){
+		var self = this,
+		context = [].shift.call(arguments),
+		args = [].slice.call(arguments, 2);
+		return function() {
+			return self.apply(context, [].slice.call(arguments))
+		}
+	}
+
+
+function ab() {
+	// console.log([].shift.call(arguments))
+	// console.log([].slice.call(arguments))
+	// var a = [].slice.call(arguments)
+	var b = [].join.call(arguments,',')
+	console.log(b)
+
+}
+ab(1,2);
+
+
+//性能优化  以空间换时间
+var mult = (function(){
+	var cache = {};
+	return function(){
+		var args = [].join.call(arguments, ',');
+		if( cache[args] ) {
+			return cache[args];
+		}
+
+		var a = 1;
+		for(var i = 0, l = arguments.length; i < l; i++) {
+			a = a * arguments[i];
+		}
+
+		return cache[args] = a;
+	}
+})();
+
+console.time(a)
+console.log(mult(1,2,3))
+console.timeEnd(a)
+
+console.time(a)
+console.log(mult(1,2,3))
+console.timeEnd(a)
+
+function isType(type) {
+	console.log('[object ' + type + ']')
+	return function(obj){
+	console.log(Object.prototype.toString.call(obj))
+		return Object.prototype.toString.call(obj) === '[object ' + type + ']';
+	}
+}
+
+var isString = isType('String');
+var isNumber = isType('Number');
+var str = "sd";
+console.log(isString('str'))
+</script>

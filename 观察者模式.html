@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>观察者模式</title>
+</head>
+<body>
+
+</body>
+</html>
+<script>
+	var Observer = (function() {
+		var _message = {};
+		return {
+			regist: function(type, fn) {
+				if(typeof _message[type] === 'undefined') {
+					_message[type] = [fn];
+				} else {
+					_message[type].push(fn);
+				}
+			},
+			fire: function(type, args) {
+				//如果消息没有被注册
+				if(!_message[type]) {
+					return;
+				}
+				var events = {
+					type: type,
+					args: args || {}
+				},
+				i = 0, len = _message[type].length;
+				for(; i < len; i++) {
+					_message[type][i].call(this,events)
+				}
+			},
+			remove: function(type, fn) {
+				if(_message[type] instanceof Array) {
+					//从最后一个消息进行遍历
+					var i = _message[type].length - 1;
+					for(; i >= 0; i--) {
+						//如果存在该动作则在消息动作序列中移除相应动作
+						_message[type][i] === fn && _message[type].splice(i,1);
+					}
+				}
+			}
+		}
+	})();
+
+	Observer.regist('test', function(e) {
+		console.log(e.type, e.args.msg);
+	})
+	Observer.fire('test', {msg: '传递参数'});
+
+
+	function $(id) {
+		return document.getElementById(id);
+	}
+
+	(function() {
+		function addMsgItem(e) {
+			var text = e.args.text;
+			ul = $('msg'),
+			li = document.createElement('li'),
+			span = document.createElement('span');
+			li.innerHTML = text;
+			//关闭按钮
+			span.onclick = function() {
+				ul.removeChild(li);
+				//发布删除留言消息
+				Observer.fire('removeCommentMessage', {
+					num: -1
+				})
+			}
+
+			//添加删除按钮
+			li.appendChild(span);
+			ul.appendChild(li);
+		}
+		// 注册添加评论信息
+		Observer.regist('addCommentMessage', addMsgItem)
+	})
+</script>

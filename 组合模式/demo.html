@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>组合模式</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+    // 但在程序设计中，也有一些和“事物是由相似的子事物构成”
+    // 类似的思想。组合模式就是用小的子对象来构建更大的对象，而这些小的子对象本身也许是由更
+    // 小的“孙对象”构成的。组合模式将对象组合成树形结构，以表示“部分-整体”的层次结构.
+
+    // 总而言之，如果子节点是叶对象，叶对象自身会处理这个请求，而如果子节点还是组合对象，
+    // 请求会继续往下传递。叶对象下面不会再有其他子节点，一个叶对象就是树的这条枝叶的尽头，
+    // 组合对象下面可能还会有子节点，
+
+    var MacroCommand = function () {
+        return {
+            commandsList: [],
+            add: function (command) {
+                this.commandsList.push(command);
+            },
+            execute: function () {
+                for (var i = 0, command; command = this.commandsList[i++];) {
+                    command.execute();
+                }
+            }
+        }
+    };
+    var openAcCommand = {
+        execute: function () {
+            console.log('打开空调');
+        },
+        add: function () {
+            throw new Error('叶对象不能添加子节点'); //透明性带来的安全问题
+        }
+    };
+    /**********家里的电视和音响是连接在一起的，所以可以用一个宏命令来组合打开电视和打开音响的命令
+     *********/
+    var openTvCommand = {
+        execute: function () {
+            console.log('打开电视');
+        },
+        add: function () {
+            throw new Error('叶对象不能添加子节点');
+        }
+    };
+    var openSoundCommand = {
+        execute: function () {
+            console.log('打开音响');
+        },
+        add: function () {
+            throw new Error('叶对象不能添加子节点');
+        }
+    };
+    var macroCommand1 = MacroCommand();
+    macroCommand1.add(openTvCommand);
+    macroCommand1.add(openSoundCommand);
+    /*********关门、打开电脑和打登录 QQ 的命令****************/
+    var closeDoorCommand = {
+        execute: function () {
+            console.log('关门');
+        },
+        add: function () {
+            throw new Error('叶对象不能添加子节点');
+        }
+    };
+    var openPcCommand = {
+        execute: function () {
+            console.log('开电脑');
+
+            var openQQCommand = {
+                execute: function () {
+                    console.log('登录 QQ');
+                }
+            };
+            var macroCommand2 = MacroCommand();
+            macroCommand2.add(closeDoorCommand);
+            macroCommand2.add(openPcCommand);
+            macroCommand2.add(openQQCommand);
+            /*********现在把所有的命令组合成一个“超级命令”**********/
+            var macroCommand = MacroCommand();
+            macroCommand.add(openAcCommand);
+            macroCommand.add(macroCommand1);
+            macroCommand.add(macroCommand2);
+            /*********最后给遥控器绑定“超级命令”**********/
+            var setCommand = (function (command) {
+                document.getElementById('button').onclick = function () {
+                    command.execute();
+                }
+            })(macroCommand);
+        }
+    }
+
+    //组合模式的例子——扫描文件夹
+    // 文件夹和文件之间的关系，非常适合用组合模式来描述。文件夹里既可以包含文件，又可以
+    // 包含其他文件夹，最终可能组合成一棵树.
+
+
+    var Folder = function (name) {
+        this.name = name;
+        this.files = [];
+    }
+
+    Folder.prototype.add = function (file) {
+        this.files.push(file);
+    }
+
+    Folder.prototype.scan = function () {
+        var file;
+        console.log('开始扫描文件夹: ' + this.name);
+        for (var i = 0; i < this.files.length; i++) {
+            file = this.files[i];
+            file.scan();
+        }
+    }
+
+    var File = function (name) {
+        this.name = name
+    }
+
+    File.prototype.add = function () {
+        throw new Error('文件下面不能再添加文件');
+    }
+
+    File.prototype.scan = function () {
+        console.log(`扫描${this.name}文件`);
+    }
+
+    var folder = new Folder('学习资料');
+    var folder1 = new Folder('javascript');
+    var folder2 = new Folder('html');
+
+    var file1 = new File('js权威指南');
+    var file2 = new File('html权威指南');
+
+    folder1.add(file1);
+    folder1.add(file2);
+
+
+    folder.add(folder1)
+    folder.add(folder2)
+
+
+
+    folder.scan();
+
+    //引用父对象 
+    // 11.7 节提到的例子中，组合对象保存了它下面的子节点的引用，这是组合模式的特点，此
+    // 时树结构是从上至下的。但有时候我们需要在子节点上保持对父节点的引用，比如在组合模式中
+    // 使用职责链时，有可能需要让请求从子节点往父节点上冒泡传递。还有当我们删除某个文件的时
+    // 候，实际上是从这个文件所在的上层文件夹中删除该文件的。 
+    console.log('-----------------')
+    var Folder = function (name) {
+        this.name = name;
+        this.parent = null;
+        this.files = [];
+    }
+
+    Folder.prototype.add = function (file) {
+        file.parent = this;
+        this.files.push(file);
+    }
+
+    Folder.prototype.scan = function () {
+        var file;
+        console.log('开始扫描文件夹: ' + this.name);
+        for (var i = 0; i < this.files.length; i++) {
+            file = this.files[i];
+            file.scan();
+        }
+    }
+
+    Folder.prototype.remove = function () {
+        if (!this.parent) {
+            return;
+        }
+        var files = this.parent.files;
+        for (var i = 0; i < this.parent.files; i++) {
+            var file = files[i];
+            if (file == this) {
+                files.splice(i, 1);
+            }
+        }
+    }
+
+    // Folder.prototype.remove = function () {
+    //     if (!this.parent) { //根节点或者树外的游离节点
+    //         return;
+    //     }
+    //     for (var files = this.parent.files, l = files.length - 1; l >= 0; l--) {
+    //         var file = files[l];
+    //         if (file === this) {
+    //             files.splice(l, 1);
+    //         }
+    //     }
+    // };
+
+    var File = function (name) {
+        this.name = name;
+        this.parent = null;
+    }
+
+    File.prototype.add = function () {
+        throw new Error('文件下面不能再添加文件');
+    }
+
+    File.prototype.scan = function () {
+        console.log(`扫描${this.name}文件`);
+    }
+
+    File.prototype.remove = function () {
+        if (!this.parent) { //根节点或者树外的游离节点
+            return;
+        }
+        for (var files = this.parent.files, l = files.length - 1; l >= 0; l--) {
+            var file = files[l];
+            if (file === this) {
+                files.splice(l, 1);
+            }
+        }
+    };
+
+    var folder = new Folder('学习资料');
+    var folder1 = new Folder('JavaScript');
+    var file1 = new Folder('深入浅出 Node.js');
+    folder1.add(new File('JavaScript 设计模式与开发实践'));
+    folder.add(folder1);
+    folder.add(file1);
+    folder1.remove(); //移除文件夹
+    folder.scan();
+
+    console.log('---------------------')
+
+    var Folder = function (name) {
+        this.name = name;
+        this.parent = null; //增加 this.parent 属性
+        this.files = [];
+    };
+    Folder.prototype.add = function (file) {
+        file.parent = this; //设置父对象
+        this.files.push(file);
+    };
+    Folder.prototype.scan = function () {
+        console.log('开始扫描文件夹: ' + this.name);
+        for (var i = 0, file, files = this.files; file = files[i++];) {
+            file.scan();
+        }
+    };
+    Folder.prototype.remove = function () {
+        if (!this.parent) { //根节点或者树外的游离节点
+            return;
+        }
+        for (var files = this.parent.files, l = files.length - 1; l >= 0; l--) {
+            var file = files[l];
+            if (file === this) {
+                files.splice(l, 1);
+            }
+        }
+    };
+
+    var File = function (name) {
+        this.name = name;
+        this.parent = null;
+    };
+    File.prototype.add = function () {
+        throw new Error('不能添加在文件下面');
+    };
+    File.prototype.scan = function () {
+        console.log('开始扫描文件: ' + this.name);
+    };
+    File.prototype.remove = function () {
+        if (!this.parent) { //根节点或者树外的游离节点
+            return;
+        }
+        for (var files = this.parent.files, l = files.length - 1; l >= 0; l--) {
+            var file = files[l];
+            if (file === this) {
+                files.splice(l, 1);
+            }
+        }
+    };
+    var folder = new Folder('学习资料');
+    var folder1 = new Folder('JavaScript');
+    var file1 = new Folder('深入浅出 Node.js');
+    folder1.add(new File('JavaScript 设计模式与开发实践'));
+    folder.add(folder1);
+    folder.add(file1);
+    folder1.remove(); //移除文件夹
+    file1.remove();
+    folder.scan();
+</script>

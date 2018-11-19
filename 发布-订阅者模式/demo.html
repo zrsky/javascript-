@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>发布订阅者模式</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+    // 发布—订阅模式又叫观察者模式，它定义对象间的一种一对多的依赖关系，当一个对象的状
+    // 态发生改变时，所有依赖于它的对象都将得到通知。在 JavaScript 开发中，我们一般用事件模型
+    // 来替代传统的发布—订阅模式。
+
+
+    //dom事件  发布者：用户  订阅者：click
+    document.body.addEventListener('click', function () {
+
+    }, false);
+
+
+    //自定义事件
+
+    //定义售楼处
+    var saleOffices = {};
+    saleOffices.clientList = {}; //缓存列表  存放订阅者回调函数
+    saleOffices.listen = function (key, fn) { //添加订阅者
+        if (!this.clientList[key]) {
+            this.clientList[key] = [];
+        }
+        this.clientList[key].push(fn); //订阅的消息添加至缓存列表
+    }
+
+    saleOffices.trigger = function () { //发布消息
+        var fns;
+        var key = Array.prototype.shift.call(arguments);
+        console.log(this.clientList)
+        for (var i in this.clientList) {
+            fns = this.clientList[key];
+            if (!fns || fns.length === 0) {
+                return false;
+            }
+            console.log(fns.length)
+            for (var j = 0, l = fns.length; j < l; j++) {
+                fns[j].apply(this, arguments);
+            }
+            // arguments 是发布信息时带上的参数
+        }
+    }
+
+    saleOffices.listen('squareMeter88', function (price, squareMeter) {
+        console.log('价格: ' + price);
+        console.log('squareMeter: ' + squareMeter);
+    })
+    saleOffices.listen('squareMeter66', function (price, squareMeter) {
+        console.log('价格: ' + price);
+        console.log('squareMeter88: ' + squareMeter);
+    })
+    saleOffices.listen('squareMeter33', function (price, squareMeter) {
+        console.log('价格: ' + price);
+        console.log('squareMeter88: ' + squareMeter);
+    })
+
+    saleOffices.trigger('squareMeter88', 3000000, '88');
+    saleOffices.trigger('squareMeter33', 2000000, '33');
+    saleOffices.trigger('squareMeter66', 1000000, '66');
+
+
+    //发布订阅者模式 -通用实现
+    var event = {
+        clientList: {},
+        listen: function (key, fn) {
+            if (!this.clientList[key]) {
+                this.clientList[key] = [];
+            }
+            this.clientList[key].push(fn);
+        },
+        trigger: function () {
+            var key = Array.prototype.shift.call(arguments);
+            var fns = this.clientList[key];
+            for (var i in this.clientList) {
+                if (!fns || fns.length === 0) {
+                    return false;
+                }
+                for (var i = 0; i < fns.length; i++) {
+                    fns[i].apply(this, arguments);
+                }
+            }
+        },
+        //取消订阅事件
+        remove: function(key, fn) {
+            var fns = this.clientList[key];
+            if(!fns) {
+                return false;
+            }
+            if(!fn) {  //如果不传回调函数  就是要取消key对应消息的所有订阅
+                fns && (fns.length = 0);
+            }
+            for(var i = fns.length; i >= 0; i-- ) {
+                if(fns[i] == fn) {
+                    fns.splice(i, 1);  //删除订阅者的回调函数
+                }
+            }
+        }
+    }
+
+    //给对象动态安装发布订阅者模式
+    var installEvent = function (obj) {
+        for (var i in event) {
+            obj[i] = event[i];
+        }
+    }
+    var salesOffices = {};
+    installEvent(salesOffices);
+
+    salesOffices.listen('squareMeter88', fn1 = function (price) { // 小明订阅消息
+        console.log('价格= ' + price);
+    });
+    salesOffices.listen('squareMeter100', fn2 = function (price) { // 小红订阅消息
+        console.log('价格= ' + price);
+    });
+
+    salesOffices.trigger('squareMeter88', 2000000); // 输出：2000000
+    salesOffices.trigger('squareMeter100', 3000000); // 输出：3000000
+
+
+    salesOffices.remove('squareMeter88', fn1)
+
+    salesOffices.trigger('squareMeter88', 2000000); // 输出：2000000
+    salesOffices.trigger('squareMeter100', 3000000); // 输出：3000000
+
+</script>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>绘制小球</title>
+	<style type="text/css">
+		.myCanvas {
+			border: 1px solid;
+		}
+	</style>
+</head>
+<body>
+	<canvas id="myCanvas" class="myCanvas" width="1000" height="1000"></canvas>
+</body>
+</html>
+<script>
+	var canvas = document.getElementById('myCanvas');
+	if(canvas.getContext) {
+		var ctx = canvas.getContext('2d');
+		ctx.fillStyle = 'red';
+		//绘制小球构造函数
+		function createBall(x,y,r) {
+			this.x = x || Math.random() * (890 - 20) + 20;
+			this.y = y || Math.random() * (890 - 20) + 20;
+			this.r = r || Math.random() * (20 - 10) + 10;
+
+			this.draw = function() {
+				ctx.beginPath();
+				ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2, true)
+				ctx.fill();
+				ctx.closePath();
+			}
+		}
+		//工厂(用于创建对象)
+		function Factory(num) {
+			if(num) {
+				var result = [];
+				for(var i = 0; i < num; i++) {
+					result.push(arguments.callee());
+				}
+				return result;
+			} else {
+				var ball = new createBall();
+				return ball;
+			}
+		}
+
+		// var arr = Factory(100);
+		// arr.forEach(function(item) {
+		// 	item.draw();
+		// })
+
+		function expandFactory() {
+			var ball = new createBall();
+			//水平方向的速度
+			ball.vx = Math.random() * 2 + 2;
+			//垂直方向的速度
+			ball.vy = Math.random() * 2 + 2;
+
+			//定义移动的方法
+			ball.move = function() {
+				var me = this;
+				setInterval(function() {
+					me.x += me.vx;
+					me.y += me.vy;
+					if(me.x - me.r < 0) {
+						me.x  = me.r;
+						me.vx = -me.vx;
+					} else if (me.x + me.r > canvas.width) {
+						me.x = canvas.width - me.r;
+						me.vx = -me.vx;
+					}
+					if(me.y - me.r < 0) {
+						me.y  = me.r;
+						me.vy = -me.vy;
+					} else if (me.y + me.r > canvas.width) {
+						me.y = canvas.width - me.r;
+						me.vy = -me.vy;
+					}
+					//清空上一帧画布
+					ctx.clearRect(0,0,canvas.width,canvas.height);
+					me.draw();
+				})
+			}
+			return ball;
+		}
+		var ball1 = expandFactory().move();
+	}
+</script>

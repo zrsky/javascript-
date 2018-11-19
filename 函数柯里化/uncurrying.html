@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>uncurrying</title>
+</head>
+
+<body>
+</body>
+
+</html>
+<script type="text/javascript">
+Function.prototype.uncurrying = function() {
+    var self = this;
+    return function() {
+        var obj = Array.prototype.shift.call(arguments);
+        return self.apply(obj, arguments);
+    }
+}
+
+Function.prototype.uncurrying = function() {
+    var self = this;
+    return function() {
+        var obj = Array.prototype.shift.call(arguments);
+        return self.apply(obj, arguments);
+    };
+};
+
+var push = Array.prototype.push.uncurrying();
+var obj = {
+    "length": 3,
+    "0": 1,
+    "1": 2,
+    "2": 3
+};
+push(obj, 4);
+(function() {
+    push(arguments, 4)
+    console.log(arguments)
+})(1, 2, 3);
+console.log(obj)
+
+
+// for(var i = 0, fn, arr = ['push', 'shift', 'forEach']; fn = arr[i];){
+// 	Array[fn] = Array.prototype[fn].uncurrying();
+// }
+
+// Array.push(obj,5)
+// console.log(obj)
+
+for (var i = 0, fn, ary = ['push', 'shift', 'forEach']; fn = ary[i++];) {
+    Array[fn] = Array.prototype[fn].uncurrying();
+};
+var obj = {
+    "length": 3,
+    "0": 1,
+    "1": 2,
+    "2": 3
+};
+Array.push(obj, 4); // 向对象中添加一个元素
+console.log(obj.length); // 输出：4
+var first = Array.shift(obj); // 截取第一个元素
+console.log(first); // 输出：1
+console.log(obj); // 输出：{0: 2, 1: 3, 2: 4, length: 3}
+
+
+//如qq创建节点
+var ary = [];
+for ( var i = 1; i <= 1000; i++ ){
+ ary.push( i ); // 假设 ary 装载了 1000 个好友的数据
+};
+var renderFriendList = function( data ){
+	console.log(333)
+ for ( var i = 0, l = data.length; i < l; i++ ){
+ var div = document.createElement( 'div' );
+ div.innerHTML = i;
+ document.body.appendChild( div );
+ }
+}; 
+
+var timeChunk = function(ary, fn, count) {
+	var obj,
+	timer;
+
+	var len = ary.length;
+	var start = function(){
+		for(var i = 0; i < (Math.min(count || 1, len)); i++){
+			obj = ary.shift();
+			console.log(111)
+			fn(obj);
+		}
+	}
+
+	timer = setInterval(function(){
+		if(ary.length === 0){
+		console.log(1111)
+			clearInterval(timer);
+			return;
+		}
+		start();
+	}, 200);
+}
+
+timeChunk(ary,  function( n ){
+ var div = document.createElement( 'div' );
+ div.innerHTML = n;
+ document.body.appendChild( div );
+ }, 8);
+
+</script>

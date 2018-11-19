@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>适配器模式</title>
+</head>
+<body>
+
+</body>
+</html>
+<script>
+	//参数适配器
+	function doSomeThing(obj) {
+		var _adapter = {
+			name: 'zhang',
+			title: '设计模式',
+			age: 24,
+			color: 'pink',
+			size: 100,
+			prize: 50
+		};
+		for(var i in _adapter) {
+			_adapter[i] = obj[i] || _adapter[i];
+		}
+	}
+
+	//数据适配器
+	//数据结构语义不好
+	var arr = ['JavaScript', 'book', '前端编程语言', '8月1日'];
+	var obj = {
+		name: '',
+		type: '',
+		title: '',
+		time: ''
+	}
+	function arrToObjAdapter(arr) {
+		return {
+			name: arr[0],
+			type: arr[1],
+			title: arr[2],
+			time: arr[3]
+		}
+	}
+	obj = arrToObjAdapter(arr);
+	console.log(obj)
+</script>

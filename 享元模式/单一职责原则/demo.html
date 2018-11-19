@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>单一职责原则</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script>
+    //SRP 原则在很多设计模式中都有着广泛的运用，例如代理模式、迭代器模式、单例模式和装
+    // 饰者模式。
+
+    //1. 代理模式
+
+    //创建img标签   把添加 img 标签的功能和预加载图片的职责分开放到两个对象中，这两个对象各自都只有一
+    // 个被修改的动机。在它们各自发生改变的时候，也不会影响另外的对象。
+    var myImage = (function () {
+        var imageNode = document.createElement('img');
+        document.body.appendChild(imageNode);
+        return {
+            setSrc: function (src) {
+                imageNode.src = src;
+            }
+        }
+    })()
+
+    var proxyImage = (function () {
+        var image = new Image;
+        image.onload = function () {
+            myImage.setSrc(this.src)
+        }
+
+        return {
+            setSrc: function (src) {
+                myImage.setSrc('');
+                image.src = src
+            }
+        }
+    })();
+
+    proxyImage.setSrc('http:// imgcache.qq.com/music/photo/000GGDys0yA0Nk.jpg');
+
+
+    //迭代器模式
+    function isArrayLike(data) {
+        return Object.prototype.toString.call(data) == '[object Array]';
+    }
+    var each = function (obj, callback) {
+        var isArray = isArrayLike(obj);
+        var i = 0;
+        if (isArray) {
+            for (; i < obj.length; i++) {
+                callback(obj[i], i, obj[i]);
+            }
+        } else {
+            for (var i in obj) {
+                callback(obj[i], i, obj[i]);
+            }
+        }
+        return obj;
+    }
+
+    var appendDiv = function (data) {
+        each(data, function (i, n) {
+            var div = document.createElement('div');
+            div.innerHTML = n;
+            document.body.appendChild(div);
+        });
+    }
+
+    appendDiv([1, 2, 3, 4, 5, 6]);
+    appendDiv({
+        a: 1,
+        b: 2,
+        c: 3
+    });
+
+    //单例模式
+    var createLoginLayer = (function () {
+        var div;
+        return function () {
+            if (!div) {
+                div = document.createElement('div');
+                div.innerHTML = '我是登录浮窗';
+                div.style.display = 'none';
+                document.body.appendChild(div);
+            }
+            return div;
+        }
+    })();
+
+    //现在我们把管理单例的职责和创建登录浮窗的职责分别封装在两个方法里，这两个方法可以
+// 独立变化而互不影响，当它们连接在一起的时候，就完成了创建唯一登录浮窗的功能，
+var getSingle = function(fn) {
+    var result;
+    return function() {
+        return result || (result == fn.apply(this,arguments));
+    }
+
+}
+
+var createDiv = function() {
+    var div = document.createElement('div');
+    div.innerHTML = '创建登陆浮窗';
+    document.body.appendChild(div);
+    return div;
+}
+
+var createLoginLayer = getSingle(createDiv);
+
+var loginLayer1 = createLoginLayer();
+var loginLayer2 = createLoginLayer();
+console.log(loginLayer1 === loginLayer2);
+
+
+
+//装饰模式
+
+Function.prototype.after = function(afterFn) {
+    var self = this;
+    return function() {
+        var ret = self.apply(this, arguments);
+        afterFn.apply(this, arguments);
+        return ret;
+    }
+}
+
+var showLogin = function() {
+    console.log('打开浮窗');
+}
+
+var log = function() {
+    console.log('上传标签为: ' + this.getAttribute('tag'));
+}
+
+showLogin = showLogin.after(log);
+
+document.getElementById( 'button' ).onclick = showLogin;
+
+
+
+// SRP 原则是所有原则中最简单也是最难正确运用的原则之一。
+// 要明确的是，并不是所有的职责都应该一一分离。
+// 一方面，如果随着需求的变化，有两个职责总是同时变化，那就不必分离他们。比如在 ajax
+// 请求的时候，创建 xhr 对象和发送 xhr 请求几乎总是在一起的，那么创建 xhr 对象的职责和发送
+// xhr 请求的职责就没有必要分开。
+// 另一方面，职责的变化轴线仅当它们确定会发生变化时才具有意义，即使两个职责已经被耦
+// 合在一起，但它们还没有发生改变的征兆，那么也许没有必要主动分离它们，在代码需要重构的
+// 时候再进行分离也不迟。
+// SRP 原则的优点是降低了单个类或者对象的复杂度，按照职责把对象分解成更小的粒度，
+// 这有助于代码的复用，也有利于进行单元测试。当一个职责需要变更的时候，不会影响到其他
+// 的职责。
+// 但 SRP 原则也有一些缺点，最明显的是会增加编写代码的复杂度。当我们按照职责把对象
+// 分解成更小的粒度之后，实际上也增大了这些对象之间相互联系的难度。

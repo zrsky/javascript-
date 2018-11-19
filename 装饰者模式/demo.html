@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>装饰者模式</title>
+</head>
+
+<body>
+
+</body>
+
+</html>
+<script type="text/javascript">
+	// 	而是喜欢留着
+	// 技能点，在游戏的进行过程中按需加技能。同样，在程序开发中，许多时候都并不希望某个类天
+	// 生就非常庞大，一次性包含许多职责。那么我们就可以使用装饰者模式。装饰者模式可以动态地
+	// 给某个对象添加一些额外的职责，而不会影响从这个类中派生的其他对象。
+
+	//这种给对象动态地增加职责的方式称为装
+	// 饰者（decorator）模式
+
+
+	var Plane = function () {}
+	Plane.prototype.fire = function () {
+		console.log('发射普通子弹');
+	}
+
+	var MissileDecorator = function (plane) {
+		this.plane = plane;
+	}
+	MissileDecorator.prototype.fire = function () {
+		this.plane.fire();
+		console.log('发射导弹');
+	}
+	var AtomDecorator = function (plane) {
+		this.plane = plane;
+	}
+	AtomDecorator.prototype.fire = function () {
+		this.plane.fire();
+		console.log('发射原子弹');
+	}
+
+	var plane = new Plane();
+	plane = new MissileDecorator(plane);
+	plane = new AtomDecorator(plane);
+	plane.fire();
+
+	// 这种给对象动态增加职责的方式，并没有真正地改动对象自身，而是将对象放入另一个对象
+	// 之中，这些对象以一条链的方式进行引用，形成一个聚合对象。这些对象都拥有相同的接口（fire
+	// 方法），当请求达到链中的某个对象时，这个对象会执行自身的操作，随后把请求转发给链中的
+	// 下一个对象。
+	//js装饰者模式
+	var plane = {
+		fire: function () {
+			console.log('发射普通子弹');
+		}
+	}
+
+	var missileDecorator = function () {
+		console.log('发射导弹')
+	}
+
+	var atomDecorator = function () {
+		console.log('发射原子弹')
+	}
+
+	var fire1 = plane.fire;
+	plane.fire = function () {
+		fire1()
+		missileDecorator();
+	}
+	var fire2 = plane.fire;
+	plane.fire = function () {
+		fire2();
+		atomDecorator();
+	}
+	plane.fire();
+
+	//装饰函数
+	// 异常发生在(1) 处的_getElementById( id )这句代码上，此时_getElementById 是一个全局函数，
+	// 当调用一个全局函数时，this 是指向 window 的，而 document.getElementById 方法的内部实现需要
+	// 使用 this 引用，this 在这个方法内预期是指向 document，而不是 window, 这是错误发生的原因，
+	// 所以使用现在的方式给函数增加功能并不保险。
+
+	// var _getElementById = document.getElementById;  //全局函数
+	// document.getElementById = function(id) {
+	// 	alert(1);
+	// 	return _getElementById(id);
+	// }
+
+	// var button = document.getElementById('button');
+
+
+
+	var _getElementById = document.getElementById;
+	document.getElementById = function () {
+		alert(1);
+		return _getElementById.apply(this, arguments);
+	}
+	var button = document.getElementById('button');
+
+
+
+	//AOP
+	Function.prototype.before = function (beforefn) {
+		var __self = this;
+		console.log(this);
+		return function () {
+			console.log(this)
+			beforefn.apply(this, arguments); // 执行新函数，且保证 this 不被劫持，新函数接受的参数
+			// 也会被原封不动地传入原函数，新函数在原函数之前执行
+			return __self.apply(this, arguments); // 执行原函数并返回原函数的执行结果，
+			// 并且保证 this 不被劫持
+		}
+	}
+	Function.prototype.after = function (afterfn) {
+		var __self = this;
+		return function () {
+			var ret = __self.apply(this, arguments);
+			afterfn.apply(this, arguments);
+			return ret;
+		}
+	};
+	document.getElementById = document.getElementById.before(function () {
+		// alert (1);
+	});
+	var button = document.getElementById('button');
+
+	//值得提到的是，上面的 AOP 实现是在 Function.prototype 上添加 before 和 after 方法，但许
+	// 多人不喜欢这种污染原型的方式，那么我们可以做一些变通，把原函数和新函数都作为参数传入
+	// before 或者 after 方法：
+
+	var before = function (fn, beforeFn) {
+		return function () {
+			beforeFn.apply(this, arguments);
+			return fn.apply(this, arguments);
+		}
+	}
+	var after = function (fn, afterFn) {
+		return function () {
+			var ret = fn.apply(this, arguments);
+			afterFn.apply(this, arguments);
+			return ret;
+		}
+	};
+
+	var a = before(function () {
+		console.log(1);
+	}, function () {
+		console.log(2);
+	});
+
+	a = before(a, function () {
+		console.log(3);
+	});
+
+	a();
+
+	//数据统计上报
+	var showLogin = function () {
+		console.log('打开登陆浮层'); //把打开浮层和上报代码放在一起了
+		log(this.getAttribute('tag'));
+	}
+
+	function log(tag) {
+		console.log('上报标签为tag');
+		//真正的上报代码
+	}
+
+	document.getElementById('button').onclick = showLogin;
+
+	// 我们看到在 showLogin 函数里，既要负责打开登录浮层，又要负责数据上报，这是两个层面
+	// 的功能，在此处却被耦合在一个函数里。使用 AOP 分离之后，
+
+	Function.prototype.after = function (afterFn) {
+		var self = this;
+		return function () {
+			var ret = self.apply(this, arguments);
+			afterFn.apply(this, arguments);
+			return ret;
+		}
+	}
+
+	var showLogin = function () {
+		console.log('打开登陆浮层');
+	}
+	var log = function () {
+		console.log('上报标签为: ' + this.getAttribute('tag'))
+	}
+	showLogin = showLogin.after(log);
+	document.getElementById('button').onclick = showLogin;
+
+
+	//用AOP动态改变函数的参数
+
+
+	//表单验证
+	Function.prototype.before = function (beforeFn) {
+		var self = this;
+		return function () {
+			if (beforeFn.apply(this, arguments) == false) {
+				return false;
+			}
+
+			return self.apply(this, arguments);
+		}
+	}
+
+	var validate = function () {
+		if (!username) {
+			alert('用户名不能为空');
+			return false;
+		}
+		if (!password) {
+			alert('密码不能为空');
+			return false;
+		}
+	};
+
+	var formSubmit = function () {
+		var param = {
+			username: username.value,
+			password: password.value
+		}
+		ajax('http:// xxx.com/login', param);
+	}
+
+	formSubmit = formSubmit.before(validate);
+
+	submitBtn.onclick = function() {
+		formSubmit();
+	}
+
+	//。作为框架作者，我们希望框架里的函
+	// 数提供的是一些稳定而方便移植的功能，那些个性化的功能可以在框架之外动态装饰上去，这可
+	// 以避免为了让框架拥有更多的功能，而去使用一些 if、else 语句预测用户的实际需要。
+</script>

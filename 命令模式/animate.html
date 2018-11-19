@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>animate</title>
+</head>
+
+<body>
+    <div id="ball" style="position:absolute;top:100px;background:rgb(190, 45, 45);width:50px;height:50px;border-radius: 50%;"></div>
+    输入小球移动后的位置：<input id="pos" />
+    <button id="moveBtn">开始移动</button>
+</body>
+
+</html>
+<script>
+    //创建接收者
+    var Animate = function (ball) {
+
+    }
+
+    var MoveCommand = function (receiver, pos) {
+        this.receiver = receiver;
+        this.pos = pos;
+        this.oldPos = null;
+    }
+
+    MoveCommand.prototype.execute = function () {
+        this.receiver.start('left', this.pos, 1000, 'strongEastOut');
+        this.oldPos = this.receiver.dom.getBoundingClientRect()[this.receiver.propertyName];
+
+    }
+
+    MoveCommand.prototype.undo = function () {
+        this.receiver.start('left', this.oldPos, 1000, 'strongEastOut');
+    }
+
+    var moveCommand;
+    moveBtn.onClick = function () {
+        var animate = new Animate(ball);
+        moveCommand = new moveCommand(animate, pos.value);
+        moveCommand.execute();
+    }
+    cancelBtn.onClick = function () {
+        moveCommand.undo();
+    }
+
+    //撤销和重做
+
+    var Ryu = {
+        attack: function () {
+            console.log('攻击');
+        },
+        defense: function () {
+            console.log('防御');
+        },
+        jump: function () {
+            console.log('跳跃');
+        },
+        crouch: function () {
+            console.log('蹲下');
+        }
+    };
+
+    var commands = {
+        "119": "jump", // W
+        "115": "crouch", // S
+        "97": "defense", // A
+        "100": "attack" // D
+    };
+
+    var makeCommand = function(receiver, state) {
+        return function() {
+            receiver[state]();
+        }
+    }
+
+    var commandStack = [];
+
+    document.onkeypress = function(e) {
+        var keyCode = e.keyCode;
+        command = makeCommand(Ryu, commands[keyCode]);
+        if(command) {
+            command();
+            commandStack.push(command);
+        }
+    };
+
+    //重复播放
+    document.getElementById('reply').onClick = function() {
+        var command;
+        while(command = commandStack.shift()){
+            command();
+        }
+    }
+
+
+    //宏命令 
+//     宏命令是一组命令的集合，通过执行宏命令的方式，可以一次执行一批命令。想象一下，家
+// 里有一个万能遥控器，每天回家的时候，只要按一个特别的按钮，它就会帮我们关上房间门，顺
+// 便打开电脑并登录 QQ。
+
+var closeDoorCommand = {
+    execute: function() {
+        console.log('关门');
+    }
+};
+var openPcCommand = {
+    execute: function() {
+        console.log('打开电视');
+    }
+};
+
+var openQQCommand = {
+ execute: function(){
+ console.log( '登录 QQ' );
+ }
+}; 
+
+//定义宏命令    智能命令与傻瓜命令
+// 其中，marcoCommand 被称为组合对象，closeDoorCommand、openPcCommand、openQQCommand 都是
+// 叶对象。在 macroCommand 的 execute 方法里，并不执行真正的操作，而是遍历它所包含的叶对象，
+// 把真正的 execute 请求委托给这些叶对象。
+// macroCommand 表现得像一个命令，但它实际上只是一组真正命令的“代理”。并非真正的代理，
+// 虽然结构上相似，但 macroCommand 只负责传递请求给叶对象，它的目的不在于控制对叶对象的访问。
+var MacroCommand = function() {
+    return {
+        commandList: [],
+        add: function(command) {  //添加子命令
+            this.commandList.push(command);
+        },
+
+        execute: function(){
+            for(var i = 0; i < this.commandList.length; i++) {
+                this.commandList[i].execute();
+            }
+        }
+    }
+};
+
+var macroCommand = MacroCommand();
+macroCommand.add(closeDoorCommand);
+macroCommand.add(openPcCommand);
+macroCommand.add(openQQCommand);
+
+macroCommand.execute();
+
+
+
+
+</script>
