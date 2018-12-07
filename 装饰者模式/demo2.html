@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>动脑学院装饰者模式</title>
+</head>
+<body>
+    
+</body>
+</html>
+<script>
+ function Man () {
+        console.log('我是一个自认为很美的女生');
+    }
+    Man.prototype = {
+        sayName: function() {
+            console.log('我是张瑞');
+        },
+        ability: function() {
+            console.log('100分')
+        },
+        technology: function() {
+            console.log('我是大神');
+        }
+    };
+
+    //创建装饰器
+    var Decorator = function(man) {
+        this.man = man;
+    }
+
+    //装饰器需要实现man中需要被装饰的方法
+    Decorator.prototype = {
+        sayName: function() {
+            this.man.sayName();
+        },
+        ability: function() {
+            this.man.ability();
+        },
+        technology: function() {
+            this.man.technology();
+        }
+    }
+
+    //我们为每一个功能创建一个装饰对象。重写原有方法
+    var ViagraMan = function(man) {
+        Decorator.call(this, man);
+        console.log('获得BUFF的能力增强了');
+    }
+    ViagraMan.prototype = new Decorator(man);
+     ViagraMan.prototype.sayName = function() {
+         console.log('我是有viagra能力而不需要viagra能力的张瑞');
+     }
+     ViagraMan.prototype.ability = function() {
+         this.man.ability();
+         console.log('能力增强到200');
+     }
+
+
+    var DNMan = function(man) {
+        Decorator.call(this, man);
+        console.log('获得动脑加成!');
+    }
+     DNMan.prototype = new Decorator(man);
+
+     DNMan.prototype.sayName = function() {
+         console.log('我是河南的张瑞');
+     }
+
+     DNMan.prototype.getLession = function() {
+         console.log('在学习动脑学院公开课');
+     }
+
+
+     var man = new Man();
+     man.sayName();
+     man.ability();
+     man.technology();
+
+     var haibushi = new ViagraMan(man);
+     haibushi.sayName();
+     haibushi.ability();
+     haibushi.technology();
+
+     //装饰器的参数对象是可以任意的可以是灵活的   装饰器可以额外添加功能
+
+     var abu = new DNMan(haibushi);
+     abu.sayName();
+     abu.ability();
+     abu.technology();
+
+
+
+     //es6 @符号是一个语法糖
+     //es7   
+     //方法装饰器
+     function sayYourName(target, key, descriptor) {
+         descriptor.value = () => {
+             console.log('我是张瑞')
+         }
+         console.log('前端工程师');
+         return descriptor;
+     }
+
+
+     class Man {
+         @sayYourName
+         toString() {
+
+         }
+     }
+
+     const man = new Man();
+     man.toString();
+
+
+     //类装饰器
+     function isMaster(target) {
+         target.isMaster = true;
+     }
+
+     @isMaster
+     class Man {
+
+     }
+     console.log(Man['isMaster']);
+
+
+     function Man(){}
+
+     Object.defineProperty(Man.prototype, p:'toString', attributes: {
+         value: function(){},
+         enumerable: true,
+         configurable: true,
+         writable: true
+     });
+
+
+     function sayYourName(target, key, descriptor) {
+         descriptor.value = () =>{
+             console.log('我是张瑞');
+         }
+         console.log('web前端工程师');
+         return descriptor;
+     }
+
+     var descriptor = {
+         value: function() {},
+         enumerable: true,
+         configurable: true,
+         writable: true
+     };
+
+     var description = sayYourName(Man.prototype, key:'toString', descriptor);
+
+     Object.defineProperty(Man.prototype, p:'toString', description);
+
+</script>

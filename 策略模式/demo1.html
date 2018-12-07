@@ -105,4 +105,33 @@
 
         }
     }
+
+
+    //h5霸王龙
+    var Attach = function (sprite) {
+        this.sprite = sprite;
+    }
+    Attach.prototype.start = function (type) {
+        return this.list[type].call(this);
+    }
+
+    Attack.prototype.list = {
+        waveBoxing: function () {
+            console.log(this.spirit.name + ': 使用波动拳');
+        },
+        whirlKick: function () {
+            console.log(this.spirit.name + ': 使用旋风腿');
+        }
+    };
+    var Sprite = function (name) {
+        this.name = name;
+        this.attach = new Attach(this);
+    }
+    Sprite.prototype.attach = function (type) {
+        this.attach.start(type);
+    }
+
+    var sprite = new Sprite('霸王龍');
+    sprite.attach('waveBoxing')
+    sprite.attach('whirlKick')
 </script>

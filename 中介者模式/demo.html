@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>中介者模式</title>
+</head>
+
+<body>
+    选择颜色: <select id="colorSelect">
+        <option value="">请选择</option>
+        <option value="red">红色</option>
+        <option value="blue">蓝色</option>
+    </select>
+    选择内存: <select id="memorySelect">
+        <option value="">请选择</option>
+        <option value="16G">16G</option>
+        <option value="32G">32G</option>
+    </select>
+    选择cpu: <select id="cpuSelect">
+        <option value="">请选择</option>
+        <option value="800">800</option>
+        <option value="801">801</option>
+    </select>
+    输入购买数量: <input type="text" id="numberInput" />
+    您选择了颜色: <div id="colorInfo"></div><br />
+    您选择了内存: <div id="memoryInfo"></div><br />
+    您选择了cpu: <div id="cpuInfo"></div><br />
+    您输入了数量: <div id="numberInfo"></div><br />
+    <button id="nextBtn" disabled="true">请选择手机颜色和购买数量</button>
+</body>
+
+</html>
+<script>
+//     中介者模式是迎合迪米特法则的一种实现。迪米特法则也叫最少知识原则，是指一个对象应
+// 该尽可能少地了解另外的对象（类似不和陌生人说话）。如果对象之间的耦合性太高，一个对象
+// 发生改变之后，难免会影响到其他的对象，跟“城门失火，殃及池鱼”的道理是一样的。而在中
+// 介者模式里，对象之间几乎不知道彼此的存在，它们只能通过中介者对象来互相影响对方。
+// 图灵社区会员 轩辕 专享 尊重版权
+// 208 第 14 章 中介者模式
+// 因此，中介者模式使各个对象之间得以解耦，以中介者和对象之间的一对多关系取代了对象
+// 之间的网状多对多关系。各个对象只需关注自身功能的实现，对象之间的交互关系交给了中介者
+// 对象来实现和维护。
+// 不过，中介者模式也存在一些缺点。其中，最大的缺点是系统中会新增一个中介者对象，因
+// 为对象之间交互的复杂性，转移成了中介者对象的复杂性，使得中介者对象经常是巨大的。中介
+// 者对象自身往往就是一个难以维护的对象。
+// 我们都知道，毒贩子虽然使吸毒者和制毒者之间的耦合度降低，但毒贩子也要抽走一部分利
+// 润。同样，在程序中，中介者对象要占去一部分内存。而且毒贩本身还要防止被警察抓住，因为
+// 它了解整个犯罪链条中的所有关系，这表明中介者对象自身往往是一个难以维护的对象。
+// 中介者模式可以非常方便地对模块或者对象进行解耦，但对象之间并非一定需要解耦。在实
+// 际项目中，模块或对象之间有一些依赖关系是很正常的。毕竟我们写程序是为了快速完成项目交
+// 付生产，而不是堆砌模式和过度设计。关键就在于如何去衡量对象之间的耦合程度。一般来说，
+// 如果对象之间的复杂耦合确实导致调用和维护出现了困难，而且这些耦合度随项目的变化呈指数
+// 增长曲线，那我们就可以考虑用中介者模式来重构代码。
+    //中介者模式的例子--泡泡堂游戏
+
+    function Player(name, teamColor) {
+        this.name = name;
+        this.teamColor = teamColor;
+        this.state = "alive";
+    }
+
+    Player.prototype.win = function () {
+        console.log(this.name + 'won');
+    }
+
+    Player.prototype.lose = function () {
+        console.log(this.name + 'lose');
+    }
+
+    //玩家死亡
+    Player.prototype.die = function () {
+        this.state = 'dead';
+        playerDirector.reciveMessage('playerDead', this);
+
+    }
+
+    Player.prototype.remove = function () {
+        playerDirector.reciveMessage('removePlayer', this); // 给中介者发送消息，移除一个玩家
+    };
+
+    Player.prototype.changeTeam = function (color) {
+        playerDirector.reciveMessage('changeTeam', this, color); // 给中介者发送消息，玩家换队
+    };
+
+    //工厂函数
+    var playerFactory = function (name, teamColor) {
+        var newPlayer = new Player(name, teamColor);
+        playerDirector.reciveMessage('addPlayer', newPlayer);
+
+    }
+
+    var playerDirector = (function () {
+        var palyers = {}, //保存所有玩家
+            operations = {}; //中介者可以执行的操作
+        //新增一个玩家
+        operations.addPlayer = function (player) {
+            var teamColor = player.teamColor;
+            players[teamColor] = players[teamColor] || []; //如果该颜色的玩家还没有成立队伍， 则新成立一个队伍
+            players[teamColor].push(player);
+        }
+        operations.removePlayer = function (player) {
+            var teamColor = player.teamColor,
+                teamPlayers = players[teamColor] || []; //该队伍所有成员
+            for (var i = teamPlayers.length - 1; i >= 0; i--) { //遍历删除
+                if (teamPlayers[i] == player) {
+                    teamPlayers.splice(i, 1);
+                }
+            }
+        }
+
+        operations.changeTeam = function (player, newTeamColor) {
+            operations.removePlayer(player);
+            player.teamColor = newTeamColor;
+            operations.addPlayer(player);
+        }
+
+        operations.playerDead = function (player) {
+            var teamColor = player.teamColor,
+                teamPlayers = players[teamColor];
+
+            var all_dead = true;
+            for (var i = 0, len = teamPlayers.length; i < len; i++) {
+                if (teamPlayers[i].state !== 'dead') {
+                    all_dead = false;
+                    break;
+                }
+            }
+
+            if (all_dead == true) {
+                for (var i = 0, len = teamPlayers.length; i < len; i++) {
+                    teamPlayers[i].lose();
+                }
+                for (var color in players) {
+                    if (color !== teamColor) {
+                        var teamPlayers = players[color]; // 其他队伍的玩家
+                        for (var i = 0, player; player = teamPlayers[i++];) {
+                            player.win(); // 其他队伍所有玩家 win
+                        }
+                    }
+                }
+            }
+        }
+        var reciveMessage = function () {
+            var message = Array.prototype.shift.call(arguments);
+            operations[message].apply(this, arguments);
+        }
+
+        return {
+            reciveMessage
+        }
+    })()
+
+
+    //购买商品
+    var goods = { // 手机库存
+        "red|32G|800": 3,
+        "red|16G||801": 8,
+        "blue|32G|800": 1,
+        "blue|16G|801": 6
+    };
+
+    var mediator = (function () {
+        var colorSelect = document.getElementById('colorSelect'),
+            memorySelect = document.getElementById('memorySelect'),
+            numberInput = document.getElementById('numberInput'),
+            cpuSelect = document.getElementById('cpuSelect'),
+            colorInfo = document.getElementById('colorInfo'),
+            memoryInfo = document.getElementById('memoryInfo'),
+            numberInfo = document.getElementById('numberInfo');
+            cpuInfo = document.getElementById('cpuInfo');
+
+        return {
+            changed: function (obj) {
+                var color = colorSelect.value,
+                    memory = memorySelect.value,
+                    number = numberInput.value,
+                    cpu = cpuSelect.value,
+                    props = color + '|' + memory + '|' + cpu,
+                    stock = goods[props];
+
+                if (obj == colorSelect) {
+                    colorInfo.innerHTML = color;
+                } else if (obj == memorySelect) {
+                    memoryInfo.innerHTML = memory;
+                } else if (obj == numberInput) {
+                    numberInfo.innerHTML = number;
+                } else if (obj == cpuSelect) {
+                    cpuInfo.innerHTML = cpu;
+                }
+
+                if (!color) {
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '请选择手机颜色';
+                    return;
+                }
+
+                if (!memory) {
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '请选择内存大小';
+                    return;
+                }
+
+                if(!cpu) {
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '请选择cpu型号';
+                    return;
+                }
+                    console.log(!number)
+                if (((number - 0) | 0) !== number - 0 || !number) {
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '请输入正确的购买数量';
+                    return;
+                }
+                
+                if(number > stock) {
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '库存不足';
+                    return;
+                }
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = '放入购物车';
+            }
+        }
+    })();
+
+
+    // 事件函数：
+    colorSelect.onchange = function () {
+        mediator.changed(this);
+    };
+    memorySelect.onchange = function () {
+        mediator.changed(this);
+    };
+    cpuSelect.oninput = function () {
+        mediator.changed(this);
+    };
+    numberInput.oninput = function () {
+        mediator.changed(this);
+    };
+</script>

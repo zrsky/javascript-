@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    
+</body>
+</html>
+<script>
+    //主要负责用于创建多类产品的实例
+    var Factory = function(type, content) {
+        if(this instanceof Factory) {
+            var s = this[type](content);
+            return s;
+        }else{
+            return new Factory(type, content);
+        }
+    };
+
+    Factory.prototype = {
+        Java: function(content) {
+            console.log(content);
+        },
+        UI: function(content) {
+            console.log(content);
+        },
+        php: function(content) {
+            console.log(content);
+        },
+    };
+    Factory('Java', 'Java哪家强');
+
+    var Demo = function() {
+        console.log(this)
+        if(!(this instanceof Demo)) {
+            return new Demo();
+        }
+    }
+    var d = Demo();
+ 
+
+</script>

@@ -16,7 +16,7 @@
 <script>
     //迭代器模式无非就是循环访问聚合对象中的各个元素
 
-
+    
     //jQuery中的迭代器
     // $.each( [1, 2, 3], function( i, n ){
     //     console.log( '当前下标为： '+ i );
@@ -26,7 +26,7 @@
     // 实现自己的迭代器
     var each = function (arr, callback) {
         for (var i = 0, l = arr.length; i < l; i++) {
-            var value = callback.call(arr[i], i, arr[i]);
+            var value = callback.call(arr[i], i    , arr[i]);
             if(value === false) {
                 break;
             }
